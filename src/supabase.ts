@@ -7,7 +7,7 @@ function getSupabaseConfig() {
   };
 }
 
-function supabaseFetch(endpoint: string, options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {}) {
+function supabaseFetch(endpoint, options) {
   const config = getSupabaseConfig();
 
   if (!config.url || !config.key) {

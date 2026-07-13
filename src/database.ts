@@ -1,10 +1,10 @@
-function buscarPaciente(criterio: string): Paciente[] {
-  const endpoint = `pacientes?or=(rud.eq.${criterio},nombre_completo.ilike.*${criterio}*)`;
+function buscarPaciente(criterio) {
+  const endpoint = 'pacientes?or=(rud.eq.' + criterio + ',nombre_completo.ilike.*' + criterio + '*)';
   return supabaseFetch(endpoint, { method: 'get' });
 }
 
-function registrarPaciente(paciente: Paciente): Paciente {
-  const opciones: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+function registrarPaciente(paciente) {
+  const opciones = {
     method: 'post',
     contentType: 'application/json',
     headers: { Prefer: 'return=representation' },
@@ -15,7 +15,7 @@ function registrarPaciente(paciente: Paciente): Paciente {
   return resultado[0];
 }
 
-function obtenerDsaConDetalles(folioDsa: string) {
+function obtenerDsaConDetalles(folioDsa) {
   const camposSelect = [
     '*',
     'uc_solicitantes(uc_denominacion,uc_cod)',
@@ -34,7 +34,7 @@ function obtenerDsaConDetalles(folioDsa: string) {
   return resultado.length > 0 ? resultado[0] : null;
 }
 
-function crearTramiteDsaCompleto(dsa: Dsa, articulos: Omit<DsaDetalle, 'id_dsa'>[]) {
+function crearTramiteDsaCompleto(dsa, articulos) {
   const dsaCreada = supabaseFetch('dsa', {
     method: 'post',
     contentType: 'application/json',
