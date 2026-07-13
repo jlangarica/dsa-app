@@ -76,11 +76,11 @@ function analizarPdfConGemini(base64Pdf) {
   };
 
   const opciones = {
-    method: 'post',
+    method: 'post' as GoogleAppsScript.URL_Fetch.HttpMethod,
     contentType: 'application/json',
     payload: JSON.stringify(payload),
     muteHttpExceptions: true
-  } as any;
+  } as GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
 
   let response;
   let code;
@@ -89,7 +89,7 @@ function analizarPdfConGemini(base64Pdf) {
 
   for (let i = 0; i < modelos.length; i++) {
     const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + modelos[i] + ':generateContent?key=' + apiKey;
-    response = UrlFetchApp.fetch(url, opciones);
+    response = UrlFetchApp.fetch(url, opciones as any);
     code = response.getResponseCode();
     text = response.getContentText();
 
