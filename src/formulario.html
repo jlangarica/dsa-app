@@ -8,10 +8,10 @@
     <style>
       body { font-family: Arial, sans-serif; margin: 0; padding: 16px; background: #f5f7fb; color: #1f2937; }
       .card { max-width: 980px; margin: 0 auto; background: white; border-radius: 12px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
-      h1 { margin-top: 0; font-size: 24px; }
+      h1 { margin-top: 0; font-size: 24px; color: #2563eb; }
       .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
       label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 4px; }
-      input, textarea, select { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
+      input, textarea, select { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; background: white; }
       textarea { min-height: 70px; resize: vertical; }
       table { width: 100%; border-collapse: collapse; margin-top: 12px; }
       th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
@@ -19,48 +19,62 @@
       .actions { display: flex; gap: 10px; align-items: center; margin-top: 16px; }
       button { padding: 10px 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
       .primary { background: #2563eb; color: white; }
+      .primary:disabled { background: #93c5fd; cursor: not-allowed; }
       .secondary { background: #e2e8f0; color: #0f172a; }
       .muted { color: #64748b; font-size: 12px; }
+      .loading-overlay { background: rgba(255,255,255,0.8); position: fixed; top:0; left:0; width:100%; height:100%; display:flex; justify-content:center; align-items:center; font-weight:bold; font-size:18px; z-index: 999; }
     </style>
   </head>
   <body>
+    <div id="loader" class="loading-overlay">⏳ Sincronizando catálogos con Supabase...</div>
+
     <div class="card">
       <h1>Registrador de Compras DSA</h1>
-      <p class="muted">Captura la cabecera y los artículos de una compra para enviarla a Supabase.</p>
+      <p class="muted">Captura la cabecera y los artículos de una compra vinculando datos reales de la base de datos.</p>
 
       <form id="dsaForm">
         <div class="grid">
           <div>
-            <label for="folio_dsa">Folio DSA</label>
-            <input id="folio_dsa" name="folio_dsa" required>
+            <label for="folio_dsa">Folio DSA *</label>
+            <input id="folio_dsa" name="folio_dsa" required placeholder="Ej: DSA-2026-001">
           </div>
           <div>
-            <label for="id_tramite">ID Trámite</label>
-            <input id="id_tramite" name="id_tramite" type="number">
+            <label for="id_tramite">Tipo de Trámite</label>
+            <select id="id_tramite" name="id_tramite">
+              <option value="">Seleccione...</option>
+            </select>
           </div>
           <div>
-            <label for="id_uc">ID Unidad</label>
-            <input id="id_uc" name="id_uc" type="number">
+            <label for="id_uc">Unidad Solicitante</label>
+            <select id="id_uc" name="id_uc">
+              <option value="">Seleccione...</option>
+            </select>
           </div>
           <div>
             <label for="fecha_recepcion">Fecha Recepción</label>
             <input id="fecha_recepcion" name="fecha_recepcion" type="date">
           </div>
           <div>
-            <label for="id_servicio">ID Servicio</label>
-            <input id="id_servicio" name="id_servicio" type="number">
+            <label for="id_servicio">Servicio Relacionado</label>
+            <select id="id_servicio" name="id_servicio">
+              <option value="">Seleccione...</option>
+            </select>
           </div>
           <div>
             <label for="no_oficio">No. Oficio</label>
             <input id="no_oficio" name="no_oficio">
           </div>
           <div>
-            <label for="id_usuario">ID Usuario</label>
-            <input id="id_usuario" name="id_usuario" type="number">
+            <label for="id_usuario">Usuario Responsable</label>
+            <select id="id_usuario" name="id_usuario">
+              <option value="">Seleccione...</option>
+            </select>
           </div>
           <div>
-            <label for="id_estatus_tramite">Estatus</label>
-            <input id="id_estatus_tramite" name="id_estatus_tramite" type="number">
+            <label for="id_estatus_tramite">Estatus del Trámite</label>
+            <select id="id_estatus_tramite" name="id_estatus_tramite">
+              <option value="">Seleccione...</option>
+            </select>
           </div>
         </div>
 
@@ -70,15 +84,15 @@
         </div>
 
         <div style="margin-top:16px;">
-          <h3 style="margin-bottom:8px;">Artículos</h3>
+          <h3 style="margin-bottom:8px;">Artículos Solicitados</h3>
           <table>
             <thead>
               <tr>
-                <th>Código</th>
-                <th>Cantidad</th>
-                <th>ID Paciente</th>
-                <th>Precio Unitario</th>
-                <th></th>
+                <th style="width: 40%;">Artículo (Catálogo) *</th>
+                <th style="width: 15%;">Cantidad *</th>
+                <th style="width: 25%;">Paciente Asignado</th>
+                <th style="width: 15%;">Precio Unitario *</th>
+                <th style="width: 5%;"></th>
               </tr>
             </thead>
             <tbody id="tablaDetalles"></tbody>
@@ -90,24 +104,94 @@
 
         <div class="actions">
           <button id="btnGuardar" class="primary" type="submit">💾 Guardar Compra en Supabase</button>
-          <button type="button" class="secondary" onclick="limpiarFormulario()">🧹 Limpiar</button>
+          <button type="button" class="secondary" onclick="limpiarFormulario()">🧹 Limpiar Todo</button>
         </div>
       </form>
     </div>
 
     <script>
+      var cacheCatalogo = [];
+      var cachePacientes = [];
+
+      window.onload = function() {
+        document.getElementById('dsaForm').addEventListener('submit', enviarFormulario);
+        
+        google.script.run
+          .withSuccessHandler(inicializarInterfaz)
+          .withFailureHandler(function(err) {
+            alert('❌ Falla crítica de inicio: ' + err.message);
+          })
+          .obtenerDatosIniciales();
+      };
+
+      function inicializarInterfaz(datos) {
+        poblarDesplegable('id_tramite', datos.tramites, 'id_tramite', 'tipo_tramite');
+
+        var listaUnidades = datos.unidades.map(function(u) {
+          return { id: u.id_uc, texto: u.uc_cod + ' - ' + u.uc_denominacion };
+        });
+        poblarDesplegable('id_uc', listaUnidades, 'id', 'texto');
+
+        poblarDesplegable('id_servicio', datos.servicios, 'id_servicio', 'nombre');
+        poblarDesplegable('id_usuario', datos.usuarios, 'id_usuario', 'nombre');
+        poblarDesplegable('id_estatus_tramite', datos.estatus, 'id_estatus_tramite', 'estatus_tramite');
+
+        cacheCatalogo = datos.catalogo || [];
+        cachePacientes = datos.pacientes || [];
+
+        document.getElementById('loader').style.display = 'none';
+        agregarFilaArticulo();
+      }
+
+      function poblarDesplegable(elementId, dataset, valueKey, textKey) {
+        var select = document.getElementById(elementId);
+        dataset.forEach(function(item) {
+          var opt = document.createElement('option');
+          opt.value = item[valueKey];
+          opt.innerText = item[textKey];
+          select.appendChild(opt);
+        });
+      }
+
       function agregarFilaArticulo() {
         var tbody = document.getElementById('tablaDetalles');
         var row = document.createElement('tr');
         row.className = 'fila-articulo';
+
+        var optCatalogo = ['<option value="">Seleccione un artículo...</option>'];
+        cacheCatalogo.forEach(function(art) {
+          optCatalogo.push('<option value="' + art.codigo_art + '">' + art.codigo_art + ' - ' + art.descripcion + ' (' + (art.presentacion || 'N/A') + ')</option>');
+        });
+
+        var optPacientes = ['<option value="">Ninguno / General</option>'];
+        cachePacientes.forEach(function(pac) {
+          optPacientes.push('<option value="' + pac.id_paciente + '">' + pac.nombre_completo + ' (RUD: ' + (pac.rud || 'S/N') + ')</option>');
+        });
+
         row.innerHTML = [
-          '<td><input type="text" name="codigo_art" required></td>',
-          '<td><input type="number" name="cantidad" min="1" required></td>',
-          '<td><input type="number" name="id_paciente"></td>',
+          '<td><select name="codigo_art" required onchange="detectarCambioArticulo(this)">' + optCatalogo.join('') + '</select></td>',
+          '<td><input type="number" name="cantidad" min="1" value="1" required></td>',
+          '<td><select name="id_paciente">' + optPacientes.join('') + '</select></td>',
           '<td><input type="number" step="0.01" name="precio_unitario" required></td>',
-          '<td><button type="button" onclick="eliminarFila(this)">❌</button></td>'
+          '<td><button type="button" style="background:none; color:red;" onclick="eliminarFila(this)">❌</button></td>'
         ].join('');
+        
         tbody.appendChild(row);
+      }
+
+      function detectarCambioArticulo(selectElement) {
+        var codigoSeleccionado = selectElement.value;
+        var fila = selectElement.closest('tr');
+        var inputPrecio = fila.querySelector('[name="precio_unitario"]');
+        var articuloEncontrado = cacheCatalogo.find(function(art) {
+          return art.codigo_art === codigoSeleccionado;
+        });
+
+        if (articuloEncontrado) {
+          inputPrecio.value = articuloEncontrado.precio_sin_iva;
+        } else {
+          inputPrecio.value = '';
+        }
       }
 
       function eliminarFila(btn) {
@@ -130,7 +214,7 @@
 
         var btn = document.getElementById('btnGuardar');
         btn.disabled = true;
-        btn.innerText = 'Procesando...';
+        btn.innerText = 'Procesando e Insertando...';
 
         var cabecera = {
           folio_dsa: document.getElementById('folio_dsa').value,
@@ -138,10 +222,10 @@
           id_uc: document.getElementById('id_uc').value ? Number(document.getElementById('id_uc').value) : null,
           fecha_recepcion: document.getElementById('fecha_recepcion').value || null,
           id_servicio: document.getElementById('id_servicio').value ? Number(document.getElementById('id_servicio').value) : null,
-          no_oficio: document.getElementById('no_oficio').value,
+          no_oficio: document.getElementById('no_oficio').value || null,
           id_usuario: document.getElementById('id_usuario').value ? Number(document.getElementById('id_usuario').value) : null,
           id_estatus_tramite: document.getElementById('id_estatus_tramite').value ? Number(document.getElementById('id_estatus_tramite').value) : null,
-          observaciones: document.getElementById('observaciones').value
+          observaciones: document.getElementById('observaciones').value || null
         };
 
         var detalles = [];
@@ -158,23 +242,18 @@
 
         google.script.run
           .withSuccessHandler(function(folioConfirmado) {
-            alert('✅ ¡Éxito! Compra guardada con el Folio: ' + folioConfirmado);
+            alert('✅ ¡Éxito total! Compra guardada en Supabase con el Folio: ' + folioConfirmado);
             limpiarFormulario();
             btn.disabled = false;
             btn.innerText = '💾 Guardar Compra en Supabase';
           })
           .withFailureHandler(function(error) {
-            alert('❌ Ocurrió un error en Supabase: ' + error.message);
+            alert('❌ Error al guardar datos: ' + error.message);
             btn.disabled = false;
             btn.innerText = '💾 Guardar Compra en Supabase';
           })
           .guardarCompraDesdeForm({ cabecera: cabecera, detalles: detalles });
       }
-
-      window.onload = function() {
-        document.getElementById('dsaForm').addEventListener('submit', enviarFormulario);
-        agregarFilaArticulo();
-      };
     </script>
   </body>
 </html>
