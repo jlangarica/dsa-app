@@ -77,7 +77,49 @@ function analizarPdfConGemini(base64Pdf) {
   }
 
   const jsonResponse = JSON.parse(text);
-  const textoExtraido = jsonResponse.candidates[0].content.parts[0].text;
+  let textoExtraido = '';
 
-  return JSON.parse(textoExtraido);
+  if (jsonResponse && jsonResponse.candidates && jsonResponse.candidates[0] && jsonResponse.candidates[0].content && jsonResponse.candidates[0].content.parts && jsonResponse.candidates[0].content.parts[0] && jsonResponse.candidates[0].content.parts[0].text) {
+    textoExtraido = jsonResponse.candidates[0].content.parts[0].text;
+  } else {
+    textoExtraido = text;
+  }
+
+  return parsearRespuestaGemini(textoExtraido);
+}
+
+function parsearRespuestaGemini(rawText) {
+  let texto = String(rawText || '').trim();
+
+  if (!texto) {
+    return {
+      folio_dsa: null,
+      no_oficio: null,
+      fecha_recepcion: null,
+      observaciones: null,
+      uc_cod_sugerido: null,
+      articulos: []
+    };
+  }
+
+  const bloqueJson = texto.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if (bloqueJson && bloqueJson[1]) {
+    texto = bloqueJson[1].trim();
+  }
+
+  const inicio = texto.indexOf('{');
+  const fin = texto.lastIndexOf('}');
+  if (inicio !== -1 && fin > inicio) {
+    texto = texto.substring(inicio, fin + 1);
+  }
+
+  try {
+    return JSON.parse(texto);
+  } catch (error) {
+    const limpio = texto.replace(/^[^{]*/, '').replace(/[^}]*$/, '');
+    if (limpio.indexOf('{') !== -1 && limpio.lastIndexOf('}') > limpio.indexOf('{')) {
+      return JSON.parse(limpio.substring(limpio.indexOf('{'), limpio.lastIndexOf('}') + 1));
+    }
+    throw new Error('No se pudo interpretar la respuesta JSON de Gemini: ' + texto);
+  }
 }
