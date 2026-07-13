@@ -34,7 +34,28 @@ function obtenerDsaConDetalles(folioDsa) {
   return resultado.length > 0 ? resultado[0] : null;
 }
 
-function crearTramiteDsaCompleto(dsa, articulos) {
+function enviarNotificacionInterna(folio, observaciones) {
+  try {
+    const props = PropertiesService.getScriptProperties();
+    const destino = props.getProperty('NOTIFICACION_EMAIL') || 'jefe.adquisiciones@hospitalcivil.org';
+
+    MailApp.sendEmail({
+      to: destino,
+      subject: '🚨 Nueva Solicitud Registrada: ' + folio,
+      htmlBody: '<div style="font-family:sans-serif;padding:20px;color:#1d1d1f;">' +
+        '<h2 style="color:#0071e3;">Notificación ERP DSA</h2>' +
+        '<p>Se ha asentado un nuevo expediente en Supabase mediante el extractor automatizado.</p>' +
+        '<hr style="border:0;border-top:1px solid #eee;" />' +
+        '<ul><li><strong>Folio asignado:</strong> ' + folio + '</li><li><strong>Asunto / Observaciones:</strong> ' + (observaciones || '-') + '</li></ul>' +
+        '<p style="font-size:12px;color:#86868b;">Este es un correo automático generado por dsa-app.</p>' +
+        '</div>'
+    });
+  } catch (error) {
+    console.warn('No se pudo enviar la notificación interna: ' + normalizarError(error));
+  }
+}
+
+function crearTramiteDsaCompleto(dsa, articulos, pdfBase64, pdfNombre) {
   const dsaCreada = supabaseFetch('dsa', {
     method: 'post',
     contentType: 'application/json',
@@ -62,10 +83,24 @@ function crearTramiteDsaCompleto(dsa, articulos) {
     payload: JSON.stringify(detallesPayload)
   });
 
+  if (pdfBase64) {
+    try {
+      const rutaPdf = subirPdfASupabaseStorage(pdfBase64, pdfNombre || (dsaCreada.folio_dsa || 'oficio') + '.pdf');
+      supabaseFetch('dsa?id_dsa=eq.' + dsaCreada.id_dsa, {
+        method: 'patch',
+        contentType: 'application/json',
+        payload: JSON.stringify({ documento_pdf_url: rutaPdf })
+      });
+    } catch (error) {
+      console.warn('No se pudo adjuntar el PDF al expediente: ' + normalizarError(error));
+    }
+  }
+
+  enviarNotificacionInterna(dsaCreada.folio_dsa, dsa.observaciones);
   return dsaCreada.folio_dsa;
 }
 
-function insertarCompraDSADetalle(cabecera, detalles) {
+function insertarCompraDSADetalle(cabecera, detalles, pdfBase64, pdfNombre) {
   var dsa = {
     folio_dsa: cabecera.folio_dsa,
     id_tramite: cabecera.id_tramite || null,
@@ -78,11 +113,33 @@ function insertarCompraDSADetalle(cabecera, detalles) {
     observaciones: cabecera.observaciones || null
   };
 
-  return crearTramiteDsaCompleto(dsa, detalles || []);
+  return crearTramiteDsaCompleto(dsa, detalles || [], pdfBase64, pdfNombre);
 }
 
 function normalizarError(error) {
   return error instanceof Error ? error.message : String(error);
+}
+
+function buscarUsuarioPorCorreo(correo) {
+  try {
+    var resultado = supabaseFetch('usuarios?select=id_usuario,nombre,correo_electronico&correo_electronico=eq.' + encodeURIComponent(correo), { method: 'get' });
+    return Array.isArray(resultado) && resultado.length > 0 ? resultado[0] : null;
+  } catch (error) {
+    try {
+      var resultadoAlterno = supabaseFetch('usuarios?select=id_usuario,nombre,correo&correo=eq.' + encodeURIComponent(correo), { method: 'get' });
+      return Array.isArray(resultadoAlterno) && resultadoAlterno.length > 0 ? resultadoAlterno[0] : null;
+    } catch (errorAlt) {
+      return null;
+    }
+  }
+}
+
+function obtenerUsuarioActual() {
+  var correo = Session.getActiveUser() ? Session.getActiveUser().getEmail() : '';
+  if (!correo) {
+    return null;
+  }
+  return buscarUsuarioPorCorreo(correo);
 }
 
 function obtenerDatosIniciales() {
@@ -94,7 +151,8 @@ function obtenerDatosIniciales() {
       usuarios: supabaseFetch('usuarios?activo=eq.true&select=id_usuario,nombre', { method: 'get' }) || [],
       estatus: supabaseFetch('estatus_tramite?select=id_estatus_tramite,estatus_tramite', { method: 'get' }) || [],
       catalogo: supabaseFetch('catalogo?activo=eq.true&select=codigo_art,descripcion,precio_sin_iva,presentacion', { method: 'get' }) || [],
-      pacientes: supabaseFetch('pacientes?select=id_paciente,nombre_completo,rud', { method: 'get' }) || []
+      pacientes: supabaseFetch('pacientes?select=id_paciente,nombre_completo,rud', { method: 'get' }) || [],
+      usuarioActual: obtenerUsuarioActual()
     };
   } catch (error) {
     throw new Error('Error al cargar catálogos desde Supabase: ' + normalizarError(error));

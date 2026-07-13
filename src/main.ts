@@ -1,4 +1,19 @@
 function doGet() {
+  const correoUsuario = Session.getActiveUser() ? Session.getActiveUser().getEmail() : '';
+  const usuarioAutorizado = correoUsuario ? buscarUsuarioPorCorreo(correoUsuario) : null;
+
+  if (!correoUsuario) {
+    return HtmlService.createHtmlOutput('<!DOCTYPE html><html><body><h2>Acceso no autorizado</h2><p>No se pudo identificar la cuenta activa de Google.</p></body></html>')
+      .setTitle('Acceso denegado')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
+
+  if (!usuarioAutorizado) {
+    return HtmlService.createHtmlOutput('<!DOCTYPE html><html><body><h2>Acceso denegado</h2><p>Tu cuenta no se encuentra registrada en la tabla de usuarios del sistema.</p></body></html>')
+      .setTitle('Acceso denegado')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
+
   return HtmlService.createHtmlOutputFromFile('formulario')
     .setTitle('Registrador de Compras DSA')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
@@ -10,7 +25,7 @@ function guardarCompraDesdeForm(payload) {
     throw new Error('El paquete de datos enviado está corrupto o incompleto.');
   }
 
-  return insertarCompraDSADetalle(payload.cabecera, payload.detalles);
+  return insertarCompraDSADetalle(payload.cabecera, payload.detalles, payload.pdfBase64, payload.pdfNombre);
 }
 
 function analizarPdfConGemini(base64Pdf) {

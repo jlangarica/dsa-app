@@ -466,6 +466,18 @@
       <div class="card">
         <div class="header" style="margin-bottom: 20px; border-bottom: none; padding-bottom: 0;">
           <div class="header-info">
+            <h3 style="margin:0; font-size: 18px; font-weight: 600; letter-spacing: -0.015em;">Resumen Financiero</h3>
+            <p>Comparativo entre importes facturados, pagados y saldo por pagar.</p>
+          </div>
+        </div>
+        <div style="max-width: 360px; margin: 0 auto;">
+          <canvas id="graficaFinanciera" height="220"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="header" style="margin-bottom: 20px; border-bottom: none; padding-bottom: 0;">
+          <div class="header-info">
             <h3 style="margin:0; font-size: 18px; font-weight: 600; letter-spacing: -0.015em;">Historial de Solicitudes</h3>
             <p>Últimos 15 registros procesados.</p>
           </div>
@@ -737,6 +749,7 @@
 
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     var cacheCatalogo = [];
     var cachePacientes = [];
@@ -784,6 +797,16 @@
 
       cacheCatalogo = datos.catalogo || [];
       cachePacientes = datos.pacientes || [];
+
+      if (datos.usuarioActual && datos.usuarioActual.id_usuario) {
+        var selectUsuario = document.getElementById('id_usuario');
+        for (var i = 0; i < selectUsuario.options.length; i++) {
+          if (String(selectUsuario.options[i].value) === String(datos.usuarioActual.id_usuario)) {
+            selectUsuario.selectedIndex = i;
+            break;
+          }
+        }
+      }
 
       document.getElementById('loader').style.display = 'none';
       agregarFilaArticulo();
@@ -837,12 +860,48 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    function dibujarGraficoFinanciero(resumen) {
+      var canvas = document.getElementById('graficaFinanciera');
+      if (!canvas) {
+        return;
+      }
+      var ctx = canvas.getContext('2d');
+      if (window.graficaFinancieraInstancia) {
+        window.graficaFinancieraInstancia.destroy();
+      }
+      window.graficaFinancieraInstancia = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Pagado', 'Por pagar'],
+          datasets: [{
+            data: [Number(resumen.pagado || 0), Number(resumen.porPagar || 0)],
+            backgroundColor: ['#34c759', '#ff3b30'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return context.label + ': ' + formatoMoneda(context.parsed);
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
     function cargarDashboardView() {
       document.getElementById('loaderText').innerText = 'Recopilando métricas en tiempo real…';
       document.getElementById('loader').style.display = 'flex';
       
       google.script.run
-        .withSuccessHandler(function(metricas) {
+        .withSuccessHandler(function(dashboard) {
+          var metricas = dashboard.metricas || dashboard;
           document.getElementById('lblTotal').innerText = metricas.total;
           document.getElementById('lblActivos').innerText = metricas.activos;
           document.getElementById('lblCancelados').innerText = metricas.cancelados;
@@ -850,7 +909,7 @@
           var tbody = document.getElementById('tablaMetricasBody');
           tbody.innerHTML = '';
           
-          if(metricas.recientes.length === 0) {
+          if (!metricas.recientes || metricas.recientes.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-tertiary); padding: 32px;">No se encontraron registros en Supabase</td></tr>';
           } else {
             metricas.recientes.forEach(function(r) {
@@ -865,6 +924,10 @@
               tbody.appendChild(tr);
             });
           }
+
+          if (dashboard.finanzas) {
+            dibujarGraficoFinanciero(dashboard.finanzas);
+          }
           
           document.getElementById('loader').style.display = 'none';
           toggleView('dashboard');
@@ -873,7 +936,7 @@
           showToast('Error al procesar métricas: ' + err.message, 'error');
           document.getElementById('loader').style.display = 'none';
         })
-        .obtenerMetricasDSA();
+        .obtenerDashboardCompleto();
     }
 
     function cambiarAVistaFormulario() {
