@@ -1,21 +1,14 @@
-function onOpen() {
-  SpreadsheetApp.getUi()
-    .createMenu('DSA App')
-    .addItem('Run', 'runMain')
-    .addItem('Test Supabase', 'probarConexionSupabase')
-    .addToUi();
+function doGet() {
+  return HtmlService.createHtmlOutputFromFile('formulario')
+    .setTitle('Registrador de Compras DSA')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
-function runMain() {
-  Logger.log('DSA App initialized');
-}
-
-function probarConexionSupabase() {
-  try {
-    const datos = supabaseFetch('usuarios?select=*&limit=1');
-    Logger.log('Conexión exitosa con Supabase.');
-    Logger.log(JSON.stringify(datos));
-  } catch (error) {
-    Logger.log(`Error en la prueba de conexión: ${error}`);
+function guardarCompraDesdeForm(payload) {
+  if (!payload || !payload.cabecera || !payload.detalles) {
+    throw new Error('El paquete de datos enviado está corrupto o incompleto.');
   }
+
+  return insertarCompraDSADetalle(payload.cabecera, payload.detalles);
 }

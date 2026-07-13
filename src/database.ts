@@ -46,10 +46,15 @@ function crearTramiteDsaCompleto(dsa, articulos) {
     throw new Error('No se pudo generar el ID de la DSA');
   }
 
-  const detallesPayload = articulos.map(art => ({
-    ...art,
-    id_dsa: dsaCreada.id_dsa
-  }));
+  const detallesPayload = articulos.map(function(art) {
+    return {
+      codigo_art: art.codigo_art,
+      cantidad: art.cantidad,
+      id_paciente: art.id_paciente,
+      precio_unitario: art.precio_unitario,
+      id_dsa: dsaCreada.id_dsa
+    };
+  });
 
   supabaseFetch('dsa_detalles', {
     method: 'post',
@@ -58,4 +63,20 @@ function crearTramiteDsaCompleto(dsa, articulos) {
   });
 
   return dsaCreada.folio_dsa;
+}
+
+function insertarCompraDSADetalle(cabecera, detalles) {
+  var dsa = {
+    folio_dsa: cabecera.folio_dsa,
+    id_tramite: cabecera.id_tramite || null,
+    id_uc: cabecera.id_uc || null,
+    fecha_recepcion: cabecera.fecha_recepcion || null,
+    id_servicio: cabecera.id_servicio || null,
+    no_oficio: cabecera.no_oficio || null,
+    id_usuario: cabecera.id_usuario || null,
+    id_estatus_tramite: cabecera.id_estatus_tramite || null,
+    observaciones: cabecera.observaciones || null
+  };
+
+  return crearTramiteDsaCompleto(dsa, detalles || []);
 }

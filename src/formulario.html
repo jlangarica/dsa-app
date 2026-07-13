@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Registrador de Compras DSA</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 0; padding: 16px; background: #f5f7fb; color: #1f2937; }
+      .card { max-width: 980px; margin: 0 auto; background: white; border-radius: 12px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+      h1 { margin-top: 0; font-size: 24px; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+      label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 4px; }
+      input, textarea, select { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
+      textarea { min-height: 70px; resize: vertical; }
+      table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+      th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
+      th { background: #f8fafc; font-size: 12px; }
+      .actions { display: flex; gap: 10px; align-items: center; margin-top: 16px; }
+      button { padding: 10px 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+      .primary { background: #2563eb; color: white; }
+      .secondary { background: #e2e8f0; color: #0f172a; }
+      .muted { color: #64748b; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Registrador de Compras DSA</h1>
+      <p class="muted">Captura la cabecera y los artículos de una compra para enviarla a Supabase.</p>
+
+      <form id="dsaForm">
+        <div class="grid">
+          <div>
+            <label for="folio_dsa">Folio DSA</label>
+            <input id="folio_dsa" name="folio_dsa" required>
+          </div>
+          <div>
+            <label for="id_tramite">ID Trámite</label>
+            <input id="id_tramite" name="id_tramite" type="number">
+          </div>
+          <div>
+            <label for="id_uc">ID Unidad</label>
+            <input id="id_uc" name="id_uc" type="number">
+          </div>
+          <div>
+            <label for="fecha_recepcion">Fecha Recepción</label>
+            <input id="fecha_recepcion" name="fecha_recepcion" type="date">
+          </div>
+          <div>
+            <label for="id_servicio">ID Servicio</label>
+            <input id="id_servicio" name="id_servicio" type="number">
+          </div>
+          <div>
+            <label for="no_oficio">No. Oficio</label>
+            <input id="no_oficio" name="no_oficio">
+          </div>
+          <div>
+            <label for="id_usuario">ID Usuario</label>
+            <input id="id_usuario" name="id_usuario" type="number">
+          </div>
+          <div>
+            <label for="id_estatus_tramite">Estatus</label>
+            <input id="id_estatus_tramite" name="id_estatus_tramite" type="number">
+          </div>
+        </div>
+
+        <div style="margin-top:12px;">
+          <label for="observaciones">Observaciones</label>
+          <textarea id="observaciones" name="observaciones"></textarea>
+        </div>
+
+        <div style="margin-top:16px;">
+          <h3 style="margin-bottom:8px;">Artículos</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Cantidad</th>
+                <th>ID Paciente</th>
+                <th>Precio Unitario</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tablaDetalles"></tbody>
+          </table>
+          <div style="margin-top:8px;">
+            <button type="button" class="secondary" onclick="agregarFilaArticulo()">➕ Agregar artículo</button>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="btnGuardar" class="primary" type="submit">💾 Guardar Compra en Supabase</button>
+          <button type="button" class="secondary" onclick="limpiarFormulario()">🧹 Limpiar</button>
+        </div>
+      </form>
+    </div>
+
+    <script>
+      function agregarFilaArticulo() {
+        var tbody = document.getElementById('tablaDetalles');
+        var row = document.createElement('tr');
+        row.className = 'fila-articulo';
+        row.innerHTML = [
+          '<td><input type="text" name="codigo_art" required></td>',
+          '<td><input type="number" name="cantidad" min="1" required></td>',
+          '<td><input type="number" name="id_paciente"></td>',
+          '<td><input type="number" step="0.01" name="precio_unitario" required></td>',
+          '<td><button type="button" onclick="eliminarFila(this)">❌</button></td>'
+        ].join('');
+        tbody.appendChild(row);
+      }
+
+      function eliminarFila(btn) {
+        var filas = document.getElementsByClassName('fila-articulo');
+        if (filas.length > 1) {
+          btn.closest('tr').remove();
+        } else {
+          alert('⚠️ El trámite debe contener al menos un artículo.');
+        }
+      }
+
+      function limpiarFormulario() {
+        document.getElementById('dsaForm').reset();
+        document.getElementById('tablaDetalles').innerHTML = '';
+        agregarFilaArticulo();
+      }
+
+      function enviarFormulario(event) {
+        event.preventDefault();
+
+        var btn = document.getElementById('btnGuardar');
+        btn.disabled = true;
+        btn.innerText = 'Procesando...';
+
+        var cabecera = {
+          folio_dsa: document.getElementById('folio_dsa').value,
+          id_tramite: document.getElementById('id_tramite').value ? Number(document.getElementById('id_tramite').value) : null,
+          id_uc: document.getElementById('id_uc').value ? Number(document.getElementById('id_uc').value) : null,
+          fecha_recepcion: document.getElementById('fecha_recepcion').value || null,
+          id_servicio: document.getElementById('id_servicio').value ? Number(document.getElementById('id_servicio').value) : null,
+          no_oficio: document.getElementById('no_oficio').value,
+          id_usuario: document.getElementById('id_usuario').value ? Number(document.getElementById('id_usuario').value) : null,
+          id_estatus_tramite: document.getElementById('id_estatus_tramite').value ? Number(document.getElementById('id_estatus_tramite').value) : null,
+          observaciones: document.getElementById('observaciones').value
+        };
+
+        var detalles = [];
+        var filas = document.getElementsByClassName('fila-articulo');
+        for (var i = 0; i < filas.length; i++) {
+          var fila = filas[i];
+          detalles.push({
+            codigo_art: fila.querySelector('[name="codigo_art"]').value,
+            cantidad: Number(fila.querySelector('[name="cantidad"]').value),
+            id_paciente: fila.querySelector('[name="id_paciente"]').value ? Number(fila.querySelector('[name="id_paciente"]').value) : null,
+            precio_unitario: Number(fila.querySelector('[name="precio_unitario"]').value)
+          });
+        }
+
+        google.script.run
+          .withSuccessHandler(function(folioConfirmado) {
+            alert('✅ ¡Éxito! Compra guardada con el Folio: ' + folioConfirmado);
+            limpiarFormulario();
+            btn.disabled = false;
+            btn.innerText = '💾 Guardar Compra en Supabase';
+          })
+          .withFailureHandler(function(error) {
+            alert('❌ Ocurrió un error en Supabase: ' + error.message);
+            btn.disabled = false;
+            btn.innerText = '💾 Guardar Compra en Supabase';
+          })
+          .guardarCompraDesdeForm({ cabecera: cabecera, detalles: detalles });
+      }
+
+      window.onload = function() {
+        document.getElementById('dsaForm').addEventListener('submit', enviarFormulario);
+        agregarFilaArticulo();
+      };
+    </script>
+  </body>
+</html>
