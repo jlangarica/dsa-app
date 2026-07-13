@@ -81,6 +81,10 @@ function insertarCompraDSADetalle(cabecera, detalles) {
   return crearTramiteDsaCompleto(dsa, detalles || []);
 }
 
+function normalizarError(error) {
+  return error instanceof Error ? error.message : String(error);
+}
+
 function obtenerDatosIniciales() {
   try {
     return {
@@ -93,7 +97,7 @@ function obtenerDatosIniciales() {
       pacientes: supabaseFetch('pacientes?select=id_paciente,nombre_completo,rud', { method: 'get' }) || []
     };
   } catch (error) {
-    throw new Error('Error al cargar catálogos desde Supabase: ' + error.message);
+    throw new Error('Error al cargar catálogos desde Supabase: ' + normalizarError(error));
   }
 }
 
@@ -121,8 +125,57 @@ function obtenerMetricasDSA() {
       recientes: registros.slice(0, 15)
     };
   } catch (error) {
-    throw new Error('No se pudieron compilar las métricas de Supabase: ' + error.message);
+    throw new Error('No se pudieron compilar las métricas de Supabase: ' + normalizarError(error));
   }
+}
+
+function supabaseFetchSeguro(endpoint, fallback) {
+  try {
+    var resultado = supabaseFetch(endpoint, { method: 'get' });
+    return resultado || fallback;
+  } catch (error) {
+    console.warn('Consulta ERP omitida: ' + endpoint + ' :: ' + normalizarError(error));
+    return fallback;
+  }
+}
+
+function sumarCampo(registros, campo) {
+  return (registros || []).reduce(function(total, item) {
+    return total + Number(item[campo] || 0);
+  }, 0);
+}
+
+function obtenerSuiteERP() {
+  var dsa = supabaseFetchSeguro('dsa?select=id_dsa,folio_dsa,fecha_recepcion,no_oficio,cancelado_at,observaciones,uc_solicitantes(uc_denominacion,uc_cod),servicios(nombre),estatus_tramite(estatus_tramite)&order=creado.desc&limit=80', []);
+  var caa = supabaseFetchSeguro('caa_autorizaciones?select=id_caa,folio,fecha_autorizacion,importe_autorizado,dsa(folio_dsa),proveedores(nombre_proveedor)&order=fecha_autorizacion.desc&limit=60', []);
+  var pedidos = supabaseFetchSeguro('pedidos?select=id_pedido,no_pedido,fecha_pedido,cancelado_at,proveedores(nombre_proveedor),estatus_entrega(estatus_entrega),caa_autorizaciones(folio,importe_autorizado,dsa(folio_dsa))&order=fecha_pedido.desc&limit=80', []);
+  var facturacion = supabaseFetchSeguro('facturacion_detalle?select=id_factura_detalle,importe_facturado,importe_pagado,fecha_pago,fecha_envio_xml_rf,facturas(no_factura,fecha_factura,proveedores(nombre_proveedor)),pedidos_detalles(pedidos(no_pedido),dsa_detalles(catalogo(descripcion)))&order=created_at.desc&limit=80', []);
+  var proveedores = supabaseFetchSeguro('proveedores?select=id_proveedor,nombre_proveedor,rfc,estado_proveedor,giro,vigencia,correo,telefono_1&order=nombre_proveedor.asc&limit=80', []);
+  var pacientes = supabaseFetchSeguro('pacientes?select=id_paciente,nombre_completo,rud&order=nombre_completo.asc&limit=80', []);
+
+  var facturado = sumarCampo(facturacion, 'importe_facturado');
+  var pagado = sumarCampo(facturacion, 'importe_pagado');
+  var autorizado = sumarCampo(caa, 'importe_autorizado');
+
+  return {
+    resumen: {
+      expedientes: dsa.length,
+      autorizaciones: caa.length,
+      pedidos: pedidos.length,
+      proveedores: proveedores.length,
+      pacientes: pacientes.length,
+      facturado: facturado,
+      pagado: pagado,
+      porPagar: Math.max(facturado - pagado, 0),
+      autorizado: autorizado
+    },
+    pipeline: dsa.slice(0, 20),
+    autorizaciones: caa,
+    pedidos: pedidos,
+    facturacion: facturacion,
+    proveedores: proveedores,
+    pacientes: pacientes
+  };
 }
 
 function obtenerVistasOperativas() {
@@ -145,6 +198,6 @@ function obtenerVistasOperativas() {
       }
     };
   } catch (error) {
-    throw new Error('No se pudieron cargar las vistas operativas: ' + error.message);
+    throw new Error('No se pudieron cargar las vistas operativas: ' + normalizarError(error));
   }
 }
