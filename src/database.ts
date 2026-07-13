@@ -40,7 +40,7 @@ function crearTramiteDsaCompleto(dsa, articulos) {
     contentType: 'application/json',
     headers: { Prefer: 'return=representation' },
     payload: JSON.stringify(dsa)
-  })[0] as Dsa;
+  })[0];
 
   if (!dsaCreada.id_dsa) {
     throw new Error('No se pudo generar el ID de la DSA');
