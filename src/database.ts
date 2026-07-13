@@ -80,3 +80,19 @@ function insertarCompraDSADetalle(cabecera, detalles) {
 
   return crearTramiteDsaCompleto(dsa, detalles || []);
 }
+
+function obtenerDatosIniciales() {
+  try {
+    return {
+      tramites: supabaseFetch('tipos_tramite?activo=eq.true&select=id_tramite,tipo_tramite', { method: 'get' }) || [],
+      unidades: supabaseFetch('uc_solicitantes?activo=eq.true&select=id_uc,uc_denominacion,uc_cod', { method: 'get' }) || [],
+      servicios: supabaseFetch('servicios?activo=eq.true&select=id_servicio,nombre', { method: 'get' }) || [],
+      usuarios: supabaseFetch('usuarios?activo=eq.true&select=id_usuario,nombre', { method: 'get' }) || [],
+      estatus: supabaseFetch('estatus_tramite?select=id_estatus_tramite,estatus_tramite', { method: 'get' }) || [],
+      catalogo: supabaseFetch('catalogo?activo=eq.true&select=codigo_art,descripcion,precio_sin_iva,presentacion', { method: 'get' }) || [],
+      pacientes: supabaseFetch('pacientes?select=id_paciente,nombre_completo,rud', { method: 'get' }) || []
+    };
+  } catch (error) {
+    throw new Error('Error al cargar catálogos desde Supabase: ' + error.message);
+  }
+}
