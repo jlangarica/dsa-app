@@ -124,3 +124,27 @@ function obtenerMetricasDSA() {
     throw new Error('No se pudieron compilar las métricas de Supabase: ' + error.message);
   }
 }
+
+function obtenerVistasOperativas() {
+  try {
+    const proveedores = supabaseFetch('proveedores?select=id_proveedor,nombre_proveedor,rfc,estado_proveedor,giro,vigencia,correo,telefono_1&order=nombre_proveedor.asc&limit=50', { method: 'get' }) || [];
+    const pedidos = supabaseFetch('pedidos?select=id_pedido,no_pedido,fecha_pedido,cancelado_at,proveedores(nombre_proveedor),estatus_entrega(estatus_entrega),caa_autorizaciones(folio,dsa(folio_dsa))&order=fecha_pedido.desc&limit=50', { method: 'get' }) || [];
+    const facturacion = supabaseFetch('facturacion_detalle?select=id_factura_detalle,importe_facturado,importe_pagado,fecha_pago,fecha_envio_xml_rf,facturas(no_factura,fecha_factura,proveedores(nombre_proveedor)),pedidos_detalles(pedidos(no_pedido),dsa_detalles(cantidad,catalogo(descripcion)))&order=created_at.desc&limit=50', { method: 'get' }) || [];
+    const catalogoFinanciero = supabaseFetch('catalogo?select=codigo_art,descripcion,precio_sin_iva,iva,presentacion,unidades_presentacion,cog(cog_id,capitulo,concepto,partida_especifica,tipo_gasto)&order=descripcion.asc&limit=50', { method: 'get' }) || [];
+
+    return {
+      proveedores: proveedores,
+      pedidos: pedidos,
+      facturacion: facturacion,
+      catalogoFinanciero: catalogoFinanciero,
+      resumen: {
+        proveedores: proveedores.length,
+        pedidos: pedidos.length,
+        facturas: facturacion.length,
+        catalogo: catalogoFinanciero.length
+      }
+    };
+  } catch (error) {
+    throw new Error('No se pudieron cargar las vistas operativas: ' + error.message);
+  }
+}

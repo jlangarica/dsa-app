@@ -357,6 +357,23 @@
     ::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.3); background-clip: padding-box; }
     ::selection { background: rgba(0, 113, 227, 0.2); color: var(--text-primary); }
 
+
+
+    /* Navigation & Operational Views */
+    .nav-cluster { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .segmented-control { display: inline-flex; padding: 4px; border: 1px solid var(--border); border-radius: var(--radius-pill); background: rgba(255, 255, 255, 0.62); box-shadow: var(--shadow-xs); }
+    .segmented-item { border: 0; background: transparent; color: var(--text-secondary); border-radius: var(--radius-pill); padding: 8px 14px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s var(--ease-standard); }
+    .segmented-item:hover { color: var(--text-primary); background: rgba(0, 0, 0, 0.04); }
+    .segmented-item.active { color: white; background: var(--text-primary); box-shadow: var(--shadow-sm); }
+    .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .insight-tile { background: linear-gradient(180deg, rgba(255,255,255,0.86), rgba(255,255,255,0.58)); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 18px; box-shadow: var(--shadow-sm); }
+    .insight-value { display: block; font-size: 30px; font-weight: 700; letter-spacing: -0.03em; }
+    .insight-label { display: block; color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+    .view-panel { display: none; }
+    .view-panel.active { display: block; animation: viewFadeIn 0.45s var(--ease-decelerate); }
+    .badge-warning { background: var(--warning-fill); color: var(--warning); }
+    .badge-neutral { background: var(--accent-fill); color: var(--accent); }
+
     @media (max-width: 768px) {
       .container { padding: 24px 16px; }
       .card { padding: 24px 20px; }
@@ -387,6 +404,7 @@
             </h1>
             <p>Métricas de transacciones sincronizadas en tiempo real con Supabase.</p>
           </div>
+          <button type="button" class="btn btn-secondary" onclick="cargarVistasOperativas()">Centro Operativo</button>
           <button type="button" class="btn btn-ai" onclick="cambiarAVistaFormulario()">
             <svg class="icon-sm" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             Nuevo Registro
@@ -442,6 +460,53 @@
       </div>
     </div>
 
+
+
+    <!-- VISTA OPERATIVA -->
+    <div id="vistaOperativa" class="view-container" style="display: none;">
+      <div class="card">
+        <div class="header" style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">
+          <div class="header-info">
+            <h1>
+              <svg class="icon" viewBox="0 0 24 24"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>
+              Centro Operativo
+            </h1>
+            <p>Vistas ejecutivas alineadas al modelo de datos: proveedores, pedidos, facturación y catálogo COG.</p>
+          </div>
+          <div class="nav-cluster">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="cargarDashboardView()">Panel</button>
+            <button type="button" class="btn btn-ai btn-sm" onclick="cambiarAVistaFormulario()">Nuevo DSA</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="insight-grid">
+        <div class="insight-tile"><span class="insight-value" id="opProveedores">-</span><span class="insight-label">Proveedores</span></div>
+        <div class="insight-tile"><span class="insight-value" id="opPedidos">-</span><span class="insight-label">Pedidos recientes</span></div>
+        <div class="insight-tile"><span class="insight-value" id="opFacturas">-</span><span class="insight-label">Movimientos RF</span></div>
+        <div class="insight-tile"><span class="insight-value" id="opCatalogo">-</span><span class="insight-label">Artículos COG</span></div>
+      </div>
+
+      <div class="card">
+        <div class="header" style="align-items:center;">
+          <div class="header-info">
+            <h3 style="margin:0; font-size: 18px; font-weight: 600;">Explorador institucional</h3>
+            <p>Navegue entre dominios críticos sin abandonar el flujo principal.</p>
+          </div>
+          <div class="segmented-control" role="tablist" aria-label="Vistas operativas">
+            <button class="segmented-item active" type="button" onclick="mostrarPanelOperativo('proveedores', this)">Proveedores</button>
+            <button class="segmented-item" type="button" onclick="mostrarPanelOperativo('pedidos', this)">Pedidos</button>
+            <button class="segmented-item" type="button" onclick="mostrarPanelOperativo('facturacion', this)">Facturación</button>
+            <button class="segmented-item" type="button" onclick="mostrarPanelOperativo('catalogo', this)">Catálogo COG</button>
+          </div>
+        </div>
+        <div id="panelProveedores" class="view-panel active"><div class="table-container"><table class="data-table"><thead><tr><th>Proveedor</th><th>RFC</th><th>Giro</th><th>Vigencia</th><th>Contacto</th><th>Estado</th></tr></thead><tbody id="tablaProveedoresBody"></tbody></table></div></div>
+        <div id="panelPedidos" class="view-panel"><div class="table-container"><table class="data-table"><thead><tr><th>Pedido</th><th>Fecha</th><th>Proveedor</th><th>CAA</th><th>DSA</th><th>Entrega</th></tr></thead><tbody id="tablaPedidosBody"></tbody></table></div></div>
+        <div id="panelFacturacion" class="view-panel"><div class="table-container"><table class="data-table"><thead><tr><th>Factura</th><th>Proveedor</th><th>Pedido</th><th>Artículo</th><th>Facturado</th><th>Pagado</th><th>Fecha pago</th></tr></thead><tbody id="tablaFacturacionBody"></tbody></table></div></div>
+        <div id="panelCatalogo" class="view-panel"><div class="table-container"><table class="data-table"><thead><tr><th>Código</th><th>Descripción</th><th>COG</th><th>Partida</th><th>Precio</th><th>IVA</th></tr></thead><tbody id="tablaCatalogoBody"></tbody></table></div></div>
+      </div>
+    </div>
+
     <!-- VISTA FORMULARIO -->
     <div id="vistaFormulario" class="view-container" style="display: block;">
       <div class="main-layout" id="mainLayout">
@@ -455,10 +520,13 @@
               </h1>
               <p>Cargue el oficio para extracción con IA o complete manualmente.</p>
             </div>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="cargarDashboardView()">
-              <svg class="icon-sm" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-              Ver Panel
-            </button>
+            <div class="nav-cluster">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="cargarDashboardView()">
+                <svg class="icon-sm" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                Ver Panel
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="cargarVistasOperativas()">Centro Operativo</button>
+            </div>
           </div>
 
           <div class="ocr-section">
@@ -636,17 +704,24 @@
     function toggleView(viewId) {
       var formView = document.getElementById('vistaFormulario');
       var dashView = document.getElementById('vistaDashboard');
+      var opView = document.getElementById('vistaOperativa');
       
       if (viewId === 'dashboard') {
         formView.style.display = 'none';
+        opView.style.display = 'none';
         dashView.style.display = 'block';
+      } else if (viewId === 'operativa') {
+        formView.style.display = 'none';
+        dashView.style.display = 'none';
+        opView.style.display = 'block';
       } else {
         dashView.style.display = 'none';
+        opView.style.display = 'none';
         formView.style.display = 'block';
       }
       
       // Reiniciar animación de entrada
-      var activeView = viewId === 'dashboard' ? dashView : formView;
+      var activeView = viewId === 'dashboard' ? dashView : (viewId === 'operativa' ? opView : formView);
       activeView.classList.remove('view-container');
       void activeView.offsetWidth; 
       activeView.classList.add('view-container');
@@ -695,6 +770,73 @@
 
     function cambiarAVistaFormulario() {
       toggleView('form');
+    }
+
+
+
+    function formatoMoneda(valor) {
+      var numero = Number(valor || 0);
+      return numero.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
+    }
+
+    function badgeEstado(texto) {
+      var normalizado = String(texto || 'Sin estado');
+      var cls = normalizado.toLowerCase().indexOf('activo') !== -1 || normalizado.toLowerCase().indexOf('entreg') !== -1 || normalizado.toLowerCase().indexOf('pag') !== -1 ? 'badge-success' : (normalizado.toLowerCase().indexOf('suspend') !== -1 || normalizado.toLowerCase().indexOf('cancel') !== -1 ? 'badge-danger' : 'badge-neutral');
+      return '<span class="badge ' + cls + '">' + normalizado + '</span>';
+    }
+
+    function cargarVistasOperativas() {
+      document.getElementById('loaderText').innerText = 'Componiendo vistas operativas…';
+      document.getElementById('loader').style.display = 'flex';
+      google.script.run
+        .withSuccessHandler(function(datos) {
+          renderizarVistasOperativas(datos);
+          document.getElementById('loader').style.display = 'none';
+          toggleView('operativa');
+        })
+        .withFailureHandler(function(err) {
+          showToast('Error al cargar vistas: ' + err.message, 'error');
+          document.getElementById('loader').style.display = 'none';
+        })
+        .obtenerVistasOperativas();
+    }
+
+    function renderizarVistasOperativas(datos) {
+      document.getElementById('opProveedores').innerText = datos.resumen.proveedores;
+      document.getElementById('opPedidos').innerText = datos.resumen.pedidos;
+      document.getElementById('opFacturas').innerText = datos.resumen.facturas;
+      document.getElementById('opCatalogo').innerText = datos.resumen.catalogo;
+
+      document.getElementById('tablaProveedoresBody').innerHTML = (datos.proveedores || []).map(function(p) {
+        return '<tr><td style="font-weight:600;">' + (p.nombre_proveedor || '-') + '</td><td>' + (p.rfc || '-') + '</td><td>' + (p.giro || '-') + '</td><td>' + (p.vigencia || '-') + '</td><td>' + (p.correo || p.telefono_1 || '-') + '</td><td>' + badgeEstado(p.estado_proveedor) + '</td></tr>';
+      }).join('') || '<tr><td colspan="6" style="text-align:center; padding:32px; color:var(--text-tertiary);">Sin proveedores para mostrar</td></tr>';
+
+      document.getElementById('tablaPedidosBody').innerHTML = (datos.pedidos || []).map(function(p) {
+        var caa = p.caa_autorizaciones || {};
+        return '<tr><td style="font-weight:600;">' + (p.no_pedido || '-') + '</td><td>' + (p.fecha_pedido || '-') + '</td><td>' + ((p.proveedores && p.proveedores.nombre_proveedor) || '-') + '</td><td>' + (caa.folio || '-') + '</td><td>' + ((caa.dsa && caa.dsa.folio_dsa) || '-') + '</td><td>' + badgeEstado(p.cancelado_at ? 'Cancelado' : ((p.estatus_entrega && p.estatus_entrega.estatus_entrega) || 'En seguimiento')) + '</td></tr>';
+      }).join('') || '<tr><td colspan="6" style="text-align:center; padding:32px; color:var(--text-tertiary);">Sin pedidos para mostrar</td></tr>';
+
+      document.getElementById('tablaFacturacionBody').innerHTML = (datos.facturacion || []).map(function(f) {
+        var factura = f.facturas || {};
+        var detalle = f.pedidos_detalles || {};
+        var dsaDetalle = detalle.dsa_detalles || {};
+        return '<tr><td style="font-weight:600;">' + (factura.no_factura || '-') + '</td><td>' + ((factura.proveedores && factura.proveedores.nombre_proveedor) || '-') + '</td><td>' + ((detalle.pedidos && detalle.pedidos.no_pedido) || '-') + '</td><td>' + ((dsaDetalle.catalogo && dsaDetalle.catalogo.descripcion) || '-') + '</td><td>' + formatoMoneda(f.importe_facturado) + '</td><td>' + formatoMoneda(f.importe_pagado) + '</td><td>' + (f.fecha_pago || '-') + '</td></tr>';
+      }).join('') || '<tr><td colspan="7" style="text-align:center; padding:32px; color:var(--text-tertiary);">Sin movimientos de facturación</td></tr>';
+
+      document.getElementById('tablaCatalogoBody').innerHTML = (datos.catalogoFinanciero || []).map(function(a) {
+        var cog = a.cog || {};
+        return '<tr><td style="font-weight:600;">' + (a.codigo_art || '-') + '</td><td>' + (a.descripcion || '-') + '</td><td>' + (cog.capitulo || cog.concepto || '-') + '</td><td>' + (cog.partida_especifica || '-') + '</td><td>' + formatoMoneda(a.precio_sin_iva) + '</td><td>' + (a.iva || 0) + '%</td></tr>';
+      }).join('') || '<tr><td colspan="6" style="text-align:center; padding:32px; color:var(--text-tertiary);">Sin artículos de catálogo</td></tr>';
+    }
+
+    function mostrarPanelOperativo(panel, boton) {
+      ['Proveedores', 'Pedidos', 'Facturacion', 'Catalogo'].forEach(function(nombre) {
+        document.getElementById('panel' + nombre).classList.remove('active');
+      });
+      document.getElementById('panel' + panel.charAt(0).toUpperCase() + panel.slice(1)).classList.add('active');
+      var botones = boton.parentNode.querySelectorAll('.segmented-item');
+      for (var i = 0; i < botones.length; i++) { botones[i].classList.remove('active'); }
+      boton.classList.add('active');
     }
 
     /* --- LÓGICA DE FORMULARIO E IA --- */
