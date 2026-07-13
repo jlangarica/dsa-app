@@ -1,5 +1,3 @@
-import { Paciente, Dsa, DsaDetalle } from './types';
-
 function buscarPaciente(criterio: string): Paciente[] {
   const endpoint = `pacientes?or=(rud.eq.${criterio},nombre_completo.ilike.*${criterio}*)`;
   return supabaseFetch(endpoint, { method: 'get' });

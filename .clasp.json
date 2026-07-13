@@ -3,7 +3,8 @@
   "rootDir": "./src",
   "scriptExtensions": [
     ".js",
-    ".gs"
+    ".gs",
+    ".ts"
   ],
   "htmlExtensions": [
     ".html"

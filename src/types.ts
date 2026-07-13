@@ -1,4 +1,4 @@
-export interface Paciente {
+declare interface Paciente {
   id_paciente?: number;
   rud?: string;
   numero_registro?: string;
@@ -9,7 +9,7 @@ export interface Paciente {
   updated_at?: string;
 }
 
-export interface Dsa {
+declare interface Dsa {
   id_dsa?: number;
   folio_dsa: string;
   id_tramite?: number;
@@ -25,7 +25,7 @@ export interface Dsa {
   motivo_cancelacion?: string;
 }
 
-export interface DsaDetalle {
+declare interface DsaDetalle {
   id_dsa_detalle?: number;
   id_dsa: number;
   codigo_art: string;
@@ -34,7 +34,7 @@ export interface DsaDetalle {
   precio_unitario: number;
 }
 
-export interface Proveedor {
+declare interface Proveedor {
   id_proveedor?: number;
   nombre_proveedor: string;
   rfc?: string;
