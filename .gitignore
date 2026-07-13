@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Clasp and local auth
+.clasprc.json
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+secrets.ts
+credenciales.json
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
