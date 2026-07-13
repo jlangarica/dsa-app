@@ -374,6 +374,30 @@
     .badge-warning { background: var(--warning-fill); color: var(--warning); }
     .badge-neutral { background: var(--accent-fill); color: var(--accent); }
 
+
+    .erp-shell { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 22px; align-items: start; }
+    .erp-sidebar { position: sticky; top: 28px; padding: 18px; }
+    .erp-brand { padding: 10px 12px 18px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 14px; }
+    .erp-brand strong { display: block; font-size: 18px; letter-spacing: -0.025em; }
+    .erp-brand span { display: block; color: var(--text-secondary); font-size: 12px; margin-top: 2px; }
+    .erp-nav { display: grid; gap: 6px; }
+    .erp-nav button { width: 100%; justify-content: flex-start; border-radius: var(--radius-lg); padding: 12px 14px; background: transparent; color: var(--text-secondary); border: 0; font: inherit; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.2s var(--ease-standard); }
+    .erp-nav button:hover { color: var(--text-primary); background: rgba(0,0,0,0.04); }
+    .erp-nav button.active { color: var(--text-primary); background: var(--bg-material-solid); box-shadow: var(--shadow-sm); }
+    .hero-card { background: linear-gradient(135deg, rgba(255,255,255,0.92), rgba(255,255,255,0.58)), radial-gradient(circle at top right, rgba(0,113,227,0.18), transparent 38%); overflow: hidden; }
+    .hero-title { font-size: clamp(34px, 5vw, 58px); line-height: 0.98; letter-spacing: -0.055em; margin: 0; font-weight: 700; }
+    .hero-subtitle { color: var(--text-secondary); max-width: 680px; font-size: 16px; margin: 14px 0 0; }
+    .erp-toolbar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .search-field { min-width: min(100%, 340px); position: relative; }
+    .search-field input { padding-left: 40px; }
+    .search-field .icon-sm { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary); }
+    .module-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 24px; }
+    .module-card { border: 1px solid var(--border); border-radius: var(--radius-xl); background: rgba(255,255,255,0.68); padding: 18px; box-shadow: var(--shadow-sm); }
+    .module-card strong { display: block; font-size: 15px; margin-bottom: 6px; }
+    .module-card p { margin: 0; color: var(--text-secondary); font-size: 13px; }
+    .amount { font-variant-numeric: tabular-nums; font-weight: 700; letter-spacing: -0.02em; }
+    @media (max-width: 980px) { .erp-shell { grid-template-columns: 1fr; } .erp-sidebar { position: static; } }
+
     @media (max-width: 768px) {
       .container { padding: 24px 16px; }
       .card { padding: 24px 20px; }
@@ -404,11 +428,14 @@
             </h1>
             <p>Métricas de transacciones sincronizadas en tiempo real con Supabase.</p>
           </div>
-          <button type="button" class="btn btn-secondary" onclick="cargarVistasOperativas()">Centro Operativo</button>
-          <button type="button" class="btn btn-ai" onclick="cambiarAVistaFormulario()">
+          <div class="nav-cluster">
+            <button type="button" class="btn btn-secondary" onclick="cargarSuiteERP()">Suite ERP</button>
+            <button type="button" class="btn btn-secondary" onclick="cargarVistasOperativas()">Centro Operativo</button>
+            <button type="button" class="btn btn-ai" onclick="cambiarAVistaFormulario()">
             <svg class="icon-sm" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            Nuevo Registro
-          </button>
+              Nuevo Registro
+            </button>
+          </div>
         </div>
       </div>
 
@@ -461,6 +488,75 @@
     </div>
 
 
+
+
+
+    <!-- SUITE ERP -->
+    <div id="vistaERP" class="view-container" style="display: none;">
+      <div class="erp-shell">
+        <aside class="card erp-sidebar">
+          <div class="erp-brand">
+            <strong>DSA ERP</strong>
+            <span>Sistema integral institucional</span>
+          </div>
+          <nav class="erp-nav" aria-label="Módulos ERP">
+            <button class="active" type="button" onclick="mostrarModuloERP('vision', this)">⌘ Visión general</button>
+            <button type="button" onclick="mostrarModuloERP('pipeline', this)">□ Expedientes DSA</button>
+            <button type="button" onclick="mostrarModuloERP('compras', this)">◇ Compras y pedidos</button>
+            <button type="button" onclick="mostrarModuloERP('finanzas', this)">◌ Finanzas RF</button>
+            <button type="button" onclick="mostrarModuloERP('directorio', this)">◍ Directorio</button>
+          </nav>
+        </aside>
+        <main>
+          <section class="card hero-card">
+            <div class="header" style="border-bottom:none; margin-bottom:0; padding-bottom:0; align-items:flex-start;">
+              <div>
+                <p class="metric-label" style="margin:0 0 10px;">Enterprise Resource Planning</p>
+                <h1 class="hero-title">Una consola para toda la operación DSA.</h1>
+                <p class="hero-subtitle">Integra solicitudes, autorizaciones, compras, proveedores, pacientes y flujo financiero en módulos conectados, sin depender de vistas aisladas.</p>
+              </div>
+              <div class="nav-cluster">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="cargarDashboardView()">Panel</button>
+                <button type="button" class="btn btn-ai btn-sm" onclick="cambiarAVistaFormulario()">Nuevo DSA</button>
+              </div>
+            </div>
+          </section>
+
+          <div class="insight-grid">
+            <div class="insight-tile"><span class="insight-value" id="erpExpedientes">-</span><span class="insight-label">Expedientes</span></div>
+            <div class="insight-tile"><span class="insight-value" id="erpPedidos">-</span><span class="insight-label">Pedidos</span></div>
+            <div class="insight-tile"><span class="insight-value amount" id="erpPorPagar">-</span><span class="insight-label">Por pagar</span></div>
+            <div class="insight-tile"><span class="insight-value" id="erpProveedores">-</span><span class="insight-label">Proveedores</span></div>
+          </div>
+
+          <section class="card">
+            <div class="erp-toolbar">
+              <div class="header-info">
+                <h3 id="erpTituloModulo" style="margin:0; font-size:18px; font-weight:600;">Visión general</h3>
+                <p id="erpDescripcionModulo">Indicadores clave y accesos directos al flujo institucional.</p>
+              </div>
+              <div class="search-field">
+                <svg class="icon-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
+                <input id="erpSearch" class="form-input" type="search" placeholder="Buscar en el módulo…" oninput="filtrarERP()">
+              </div>
+            </div>
+
+            <div id="erpModuloVision" class="view-panel active">
+              <div class="module-grid">
+                <div class="module-card"><strong>Workflow DSA → CAA → Pedido</strong><p>Seguimiento ejecutivo del avance entre expediente, autorización y orden de compra.</p></div>
+                <div class="module-card"><strong>Control presupuestal</strong><p>Lectura de importes autorizados, facturados, pagados y saldo por pagar.</p></div>
+                <div class="module-card"><strong>Maestros conectados</strong><p>Proveedores y pacientes disponibles como entidades centrales del sistema.</p></div>
+                <div class="module-card"><strong>UX nativa</strong><p>Panel de navegación persistente, búsqueda por módulo y microinteracciones Apple-like.</p></div>
+              </div>
+            </div>
+            <div id="erpModuloPipeline" class="view-panel"><div class="table-container"><table class="data-table"><thead><tr><th>Folio</th><th>Oficio</th><th>Unidad</th><th>Servicio</th><th>Fecha</th><th>Estado</th></tr></thead><tbody id="erpPipelineBody"></tbody></table></div></div>
+            <div id="erpModuloCompras" class="view-panel"><div class="table-container"><table class="data-table"><thead><tr><th>Pedido</th><th>Fecha</th><th>Proveedor</th><th>CAA</th><th>DSA</th><th>Estatus</th></tr></thead><tbody id="erpComprasBody"></tbody></table></div></div>
+            <div id="erpModuloFinanzas" class="view-panel"><div class="table-container"><table class="data-table"><thead><tr><th>Factura</th><th>Proveedor</th><th>Pedido</th><th>Artículo</th><th>Facturado</th><th>Pagado</th><th>Pago</th></tr></thead><tbody id="erpFinanzasBody"></tbody></table></div></div>
+            <div id="erpModuloDirectorio" class="view-panel"><div class="table-container"><table class="data-table"><thead><tr><th>Entidad</th><th>Identificador</th><th>Clasificación</th><th>Contacto</th><th>Estado</th></tr></thead><tbody id="erpDirectorioBody"></tbody></table></div></div>
+          </section>
+        </main>
+      </div>
+    </div>
 
     <!-- VISTA OPERATIVA -->
     <div id="vistaOperativa" class="view-container" style="display: none;">
@@ -525,6 +621,7 @@
                 <svg class="icon-sm" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                 Ver Panel
               </button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="cargarSuiteERP()">Suite ERP</button>
               <button type="button" class="btn btn-secondary btn-sm" onclick="cargarVistasOperativas()">Centro Operativo</button>
             </div>
           </div>
@@ -644,6 +741,8 @@
     var cacheCatalogo = [];
     var cachePacientes = [];
     var currentPdfUrl = null;
+    var cacheERP = null;
+    var moduloERPActivo = 'vision';
 
     function showToast(message, type) {
       var toast = document.createElement('div');
@@ -705,23 +804,32 @@
       var formView = document.getElementById('vistaFormulario');
       var dashView = document.getElementById('vistaDashboard');
       var opView = document.getElementById('vistaOperativa');
+      var erpView = document.getElementById('vistaERP');
       
       if (viewId === 'dashboard') {
         formView.style.display = 'none';
         opView.style.display = 'none';
+        erpView.style.display = 'none';
         dashView.style.display = 'block';
       } else if (viewId === 'operativa') {
         formView.style.display = 'none';
         dashView.style.display = 'none';
+        erpView.style.display = 'none';
         opView.style.display = 'block';
+      } else if (viewId === 'erp') {
+        formView.style.display = 'none';
+        dashView.style.display = 'none';
+        opView.style.display = 'none';
+        erpView.style.display = 'block';
       } else {
         dashView.style.display = 'none';
         opView.style.display = 'none';
+        erpView.style.display = 'none';
         formView.style.display = 'block';
       }
       
       // Reiniciar animación de entrada
-      var activeView = viewId === 'dashboard' ? dashView : (viewId === 'operativa' ? opView : formView);
+      var activeView = viewId === 'dashboard' ? dashView : (viewId === 'operativa' ? opView : (viewId === 'erp' ? erpView : formView));
       activeView.classList.remove('view-container');
       void activeView.offsetWidth; 
       activeView.classList.add('view-container');
@@ -837,6 +945,77 @@
       var botones = boton.parentNode.querySelectorAll('.segmented-item');
       for (var i = 0; i < botones.length; i++) { botones[i].classList.remove('active'); }
       boton.classList.add('active');
+    }
+
+
+
+    function cargarSuiteERP() {
+      document.getElementById('loaderText').innerText = 'Orquestando módulos ERP…';
+      document.getElementById('loader').style.display = 'flex';
+      google.script.run
+        .withSuccessHandler(function(datos) {
+          cacheERP = datos;
+          renderizarSuiteERP(datos);
+          document.getElementById('loader').style.display = 'none';
+          toggleView('erp');
+        })
+        .withFailureHandler(function(err) {
+          showToast('Error al cargar Suite ERP: ' + err.message, 'error');
+          document.getElementById('loader').style.display = 'none';
+        })
+        .obtenerSuiteERP();
+    }
+
+    function textoSeguro(valor) { return valor === null || valor === undefined || valor === '' ? '-' : String(valor); }
+
+    function renderizarSuiteERP(datos) {
+      var resumen = datos.resumen || {};
+      document.getElementById('erpExpedientes').innerText = resumen.expedientes || 0;
+      document.getElementById('erpPedidos').innerText = resumen.pedidos || 0;
+      document.getElementById('erpPorPagar').innerText = formatoMoneda(resumen.porPagar || 0);
+      document.getElementById('erpProveedores').innerText = resumen.proveedores || 0;
+
+      document.getElementById('erpPipelineBody').innerHTML = (datos.pipeline || []).map(function(d) {
+        return '<tr data-search="' + textoSeguro(d.folio_dsa) + ' ' + textoSeguro(d.no_oficio) + ' ' + textoSeguro(d.observaciones) + '"><td style="font-weight:600;">' + textoSeguro(d.folio_dsa) + '</td><td>' + textoSeguro(d.no_oficio) + '</td><td>' + textoSeguro(d.uc_solicitantes && (d.uc_solicitantes.uc_cod + ' - ' + d.uc_solicitantes.uc_denominacion)) + '</td><td>' + textoSeguro(d.servicios && d.servicios.nombre) + '</td><td>' + textoSeguro(d.fecha_recepcion) + '</td><td>' + badgeEstado(d.cancelado_at ? 'Cancelado' : ((d.estatus_tramite && d.estatus_tramite.estatus_tramite) || 'Activo')) + '</td></tr>';
+      }).join('') || '<tr><td colspan="6" style="text-align:center; padding:32px; color:var(--text-tertiary);">Sin expedientes DSA</td></tr>';
+
+      document.getElementById('erpComprasBody').innerHTML = (datos.pedidos || []).map(function(p) {
+        var caa = p.caa_autorizaciones || {};
+        return '<tr data-search="' + textoSeguro(p.no_pedido) + ' ' + textoSeguro((p.proveedores || {}).nombre_proveedor) + '"><td style="font-weight:600;">' + textoSeguro(p.no_pedido) + '</td><td>' + textoSeguro(p.fecha_pedido) + '</td><td>' + textoSeguro(p.proveedores && p.proveedores.nombre_proveedor) + '</td><td>' + textoSeguro(caa.folio) + '</td><td>' + textoSeguro(caa.dsa && caa.dsa.folio_dsa) + '</td><td>' + badgeEstado(p.cancelado_at ? 'Cancelado' : ((p.estatus_entrega && p.estatus_entrega.estatus_entrega) || 'En seguimiento')) + '</td></tr>';
+      }).join('') || '<tr><td colspan="6" style="text-align:center; padding:32px; color:var(--text-tertiary);">Sin pedidos</td></tr>';
+
+      document.getElementById('erpFinanzasBody').innerHTML = (datos.facturacion || []).map(function(f) {
+        var factura = f.facturas || {}, detalle = f.pedidos_detalles || {}, dsaDetalle = detalle.dsa_detalles || {};
+        return '<tr data-search="' + textoSeguro(factura.no_factura) + ' ' + textoSeguro((factura.proveedores || {}).nombre_proveedor) + '"><td style="font-weight:600;">' + textoSeguro(factura.no_factura) + '</td><td>' + textoSeguro(factura.proveedores && factura.proveedores.nombre_proveedor) + '</td><td>' + textoSeguro(detalle.pedidos && detalle.pedidos.no_pedido) + '</td><td>' + textoSeguro(dsaDetalle.catalogo && dsaDetalle.catalogo.descripcion) + '</td><td class="amount">' + formatoMoneda(f.importe_facturado) + '</td><td class="amount">' + formatoMoneda(f.importe_pagado) + '</td><td>' + textoSeguro(f.fecha_pago) + '</td></tr>';
+      }).join('') || '<tr><td colspan="7" style="text-align:center; padding:32px; color:var(--text-tertiary);">Sin facturación</td></tr>';
+
+      var directorio = (datos.proveedores || []).map(function(p) { return '<tr data-search="' + textoSeguro(p.nombre_proveedor) + ' ' + textoSeguro(p.rfc) + '"><td style="font-weight:600;">' + textoSeguro(p.nombre_proveedor) + '</td><td>' + textoSeguro(p.rfc) + '</td><td>' + textoSeguro(p.giro) + '</td><td>' + textoSeguro(p.correo || p.telefono_1) + '</td><td>' + badgeEstado(p.estado_proveedor) + '</td></tr>'; }).join('');
+      directorio += (datos.pacientes || []).map(function(p) { return '<tr data-search="' + textoSeguro(p.nombre_completo) + ' ' + textoSeguro(p.rud) + '"><td style="font-weight:600;">' + textoSeguro(p.nombre_completo) + '</td><td>' + textoSeguro(p.rud) + '</td><td>Paciente</td><td>-</td><td>' + badgeEstado('Activo') + '</td></tr>'; }).join('');
+      document.getElementById('erpDirectorioBody').innerHTML = directorio || '<tr><td colspan="5" style="text-align:center; padding:32px; color:var(--text-tertiary);">Sin entidades maestras</td></tr>';
+    }
+
+    function mostrarModuloERP(modulo, boton) {
+      moduloERPActivo = modulo;
+      ['Vision', 'Pipeline', 'Compras', 'Finanzas', 'Directorio'].forEach(function(nombre) { document.getElementById('erpModulo' + nombre).classList.remove('active'); });
+      document.getElementById('erpModulo' + modulo.charAt(0).toUpperCase() + modulo.slice(1)).classList.add('active');
+      var botones = boton.parentNode.querySelectorAll('button');
+      for (var i = 0; i < botones.length; i++) { botones[i].classList.remove('active'); }
+      boton.classList.add('active');
+      var titulos = { vision: ['Visión general', 'Indicadores clave y accesos directos al flujo institucional.'], pipeline: ['Expedientes DSA', 'Solicitudes, unidades y estado del trámite.'], compras: ['Compras y pedidos', 'Órdenes conectadas con CAA, proveedor y entrega.'], finanzas: ['Finanzas RF', 'Facturación, pagos y saldos operativos.'], directorio: ['Directorio maestro', 'Proveedores y pacientes como entidades de referencia.'] };
+      document.getElementById('erpTituloModulo').innerText = titulos[modulo][0];
+      document.getElementById('erpDescripcionModulo').innerText = titulos[modulo][1];
+      document.getElementById('erpSearch').value = '';
+      filtrarERP();
+    }
+
+    function filtrarERP() {
+      var panel = document.getElementById('erpModulo' + moduloERPActivo.charAt(0).toUpperCase() + moduloERPActivo.slice(1));
+      var filtro = (document.getElementById('erpSearch').value || '').toLowerCase();
+      var filas = panel.querySelectorAll('tbody tr');
+      for (var i = 0; i < filas.length; i++) {
+        var texto = (filas[i].getAttribute('data-search') || filas[i].innerText || '').toLowerCase();
+        filas[i].style.display = texto.indexOf(filtro) !== -1 ? '' : 'none';
+      }
     }
 
     /* --- LÓGICA DE FORMULARIO E IA --- */
