@@ -187,6 +187,21 @@ function obtenerMetricasDSA() {
   }
 }
 
+function obtenerDashboardCompleto() {
+  const metricas = obtenerMetricasDSA();
+  const facturacion = supabaseFetchSeguro('facturacion_detalle?select=importe_facturado,importe_pagado', []);
+  const pagado = sumarCampo(facturacion, 'importe_pagado');
+  const facturado = sumarCampo(facturacion, 'importe_facturado');
+
+  return {
+    metricas: metricas,
+    finanzas: {
+      pagado: pagado,
+      porPagar: Math.max(facturado - pagado, 0)
+    }
+  };
+}
+
 function supabaseFetchSeguro(endpoint, fallback) {
   try {
     var resultado = supabaseFetch(endpoint, { method: 'get' });
