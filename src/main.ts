@@ -75,7 +75,7 @@ function analizarPdfConGemini(base64Pdf) {
     }
   };
 
-  const opciones = {
+  const opciones: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: 'post',
     contentType: 'application/json',
     payload: JSON.stringify(payload),
