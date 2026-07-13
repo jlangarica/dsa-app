@@ -89,7 +89,7 @@ function analizarPdfConGemini(base64Pdf) {
 
   for (let i = 0; i < modelos.length; i++) {
     const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + modelos[i] + ':generateContent?key=' + apiKey;
-    response = UrlFetchApp.fetch(url, opciones as any);
+    response = UrlFetchApp.fetch(url, opciones);
     code = response.getResponseCode();
     text = response.getContentText();
 
