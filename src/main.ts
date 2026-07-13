@@ -76,11 +76,11 @@ function analizarPdfConGemini(base64Pdf) {
   };
 
   const opciones = {
-    method: 'post' as GoogleAppsScript.URL_Fetch.HttpMethod,
+    method: 'post',
     contentType: 'application/json',
     payload: JSON.stringify(payload),
     muteHttpExceptions: true
-  } as GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
+  };
 
   let response;
   let code;
