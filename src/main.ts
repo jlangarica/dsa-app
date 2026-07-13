@@ -21,7 +21,7 @@ function analizarPdfConGemini(base64Pdf) {
     throw new Error('Falta configurar la propiedad del script GEMINI_API_KEY en Google Apps Script.');
   }
 
-  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey;
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=' + apiKey;
 
   const prompt = `Analiza este documento oficial en PDF del Hospital Civil de Guadalajara. Realiza un OCR estricto y estructurado.
   Debes identificar y mapear los campos requeridos respondiendo ÚNICAMENTE con un objeto JSON con el siguiente formato:
