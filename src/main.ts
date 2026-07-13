@@ -21,8 +21,7 @@ function analizarPdfConGemini(base64Pdf) {
     throw new Error('Falta configurar la propiedad del script GEMINI_API_KEY en Google Apps Script.');
   }
 
-  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=' + apiKey;
-
+  const modelos = ['gemini-2.0-flash', 'gemini-2.0-flash-lite'];
   const prompt = `Analiza este documento oficial en PDF del Hospital Civil de Guadalajara. Realiza un OCR estricto y estructurado.
   Debes identificar y mapear los campos requeridos respondiendo ÚNICAMENTE con un objeto JSON con el siguiente formato:
   {
@@ -68,12 +67,26 @@ function analizarPdfConGemini(base64Pdf) {
     muteHttpExceptions: true
   };
 
-  const response = UrlFetchApp.fetch(url, opciones);
-  const code = response.getResponseCode();
-  const text = response.getContentText();
+  let response;
+  let code;
+  let text;
+  let ultimoError = '';
+
+  for (let i = 0; i < modelos.length; i++) {
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + modelos[i] + ':generateContent?key=' + apiKey;
+    response = UrlFetchApp.fetch(url, opciones);
+    code = response.getResponseCode();
+    text = response.getContentText();
+
+    if (code === 200) {
+      break;
+    }
+
+    ultimoError = text;
+  }
 
   if (code !== 200) {
-    throw new Error('Error en el motor IA Gemini [Código ' + code + ']: ' + text);
+    throw new Error('Error en el motor IA Gemini [Código ' + code + ']: ' + ultimoError);
   }
 
   const jsonResponse = JSON.parse(text);
