@@ -17,12 +17,20 @@ function supabaseFetch(endpoint: string, options: GoogleAppsScript.URL_Fetch.URL
   const url = `${config.url}/rest/v1/${endpoint}`;
   const defaultHeaders = {
     apikey: config.key,
-    Authorization: `Bearer ${config.key}`
+    Authorization: `Bearer ${config.key}`,
+    Accept: 'application/json'
   };
 
   options.headers = { ...defaultHeaders, ...options.headers };
   options.muteHttpExceptions = true;
 
   const response = UrlFetchApp.fetch(url, options);
-  return JSON.parse(response.getContentText());
+  const code = response.getResponseCode();
+  const text = response.getContentText();
+
+  if (code >= 200 && code < 300) {
+    return text ? JSON.parse(text) : null;
+  }
+
+  throw new Error(`Error en Supabase [${code}]: ${text}`);
 }
