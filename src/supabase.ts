@@ -45,7 +45,7 @@ function subirPdfASupabaseStorage(base64Data, nombreArchivo) {
   const bytes = Utilities.base64Decode(base64Data);
   const blob = Utilities.newBlob(bytes, 'application/pdf', nombreArchivo);
 
-  const opciones: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+  const opciones = {
     method: 'post',
     headers: {
       apikey: config.key,
