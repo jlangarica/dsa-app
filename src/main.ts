@@ -18,12 +18,31 @@ function analizarPdfConGemini(base64Pdf) {
   const apiKey = props.getProperty('GEMINI_API_KEY');
 
   if (!apiKey) {
-    throw new Error('Falta configurar la propiedad del script GEMINI_API_KEY.');
+    throw new Error('Falta configurar la propiedad del script GEMINI_API_KEY en Google Apps Script.');
   }
 
   const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey;
 
-  const prompt = 'Analiza detalladamente este oficio de solicitud en PDF. Realiza un OCR estricto y extrae la información necesaria. Debes responder ÚNICAMENTE con un objeto JSON válido con la siguiente estructura: {"folio_dsa":"Extrae el número o identificador de folio de la solicitud (vuelve a formatear si es necesario)","no_oficio":"El número de oficio que identifica al documento","fecha_recepcion":"La fecha del documento convertida al formato estricto YYYY-MM-DD (ej: 2026-03-15)","observaciones":"Un resumen muy conciso de 1 renglón del asunto o justificación de la compra","articulos":[{"codigo_art":"El código del artículo o SKU si aparece de forma exacta, sino déjalo vacío \"\"","cantidad":número entero de piezas solicitadas,"precio_unitario":precio sugerido si aparece en el texto, sino pon 0}]} Requisitos: No envíes explicaciones, no uses marcas de bloques de código markdown (```json). Solo devuelve el string del JSON puro. Si un campo de texto no se encuentra, devuélvelo como null o un arreglo vacío [] en el caso de los artículos.';
+  const prompt = `Analiza este documento oficial en PDF del Hospital Civil de Guadalajara. Realiza un OCR estricto y estructurado.
+  Debes identificar y mapear los campos requeridos respondiendo ÚNICAMENTE con un objeto JSON con el siguiente formato:
+  {
+    "folio_dsa": "Busca el sello de 'RECIBI' o 'DIV. DE SERVS. ADMVOS.' y extrae el número de FOLIO manuscrito o estampado de 3 o 4 dígitos (ej: '0241'). Si no hay sello, usa el número de oficio limpio",
+    "no_oficio": "El código identificador del oficio en la parte superior derecha (ej: 'AHCGFAA/COEΡ/189/2026')",
+    "fecha_recepcion": "La fecha que se encuentra DENTRO del sello de recibido. Conviértela obligatoriamente al formato YYYY-MM-DD (ej: si dice '16 FEB. 2026' debe ser '2026-02-16')",
+    "observaciones": "Usa el texto del campo 'ASUNTO:' de la cabecera (ej: 'SOLICITUD PARA TONER IMPRESORA')",
+    "uc_cod_sugerido": "Busca en el documento (normalmente en la hoja de Negativa de Insumo o metadatos) una clave bajo el término 'U.C.' o 'Servicio Solicitante' (ej: '4038'). Si no existe, pon null",
+    "articulos": [
+      {
+        "codigo_art": "El número de código del insumo de 10 dígitos (ej: '2141002079')",
+        "cantidad": Extrae solo el número entero aislado del campo 'CANTIDAD REQUERIDA' (ej: si dice '1 (UNO)' o '1' guarda el número 1),
+        "precio_unitario": 0
+      }
+    ]
+  }
+  Reglas críticas de formato:
+  1. No agregues texto introductorio ni explicaciones secundarias.
+  2. No utilices bloques de código Markdown como \`\`\`json ... \`\`\`.
+  3. Si un dato no es visible, establécelo como null.`;
 
   const payload = {
     contents: [{

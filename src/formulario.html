@@ -182,6 +182,16 @@
               if (resultadoIA.fecha_recepcion) document.getElementById('fecha_recepcion').value = resultadoIA.fecha_recepcion;
               if (resultadoIA.observaciones) document.getElementById('observaciones').value = resultadoIA.observaciones;
 
+              if (resultadoIA.uc_cod_sugerido) {
+                var selectUc = document.getElementById('id_uc');
+                for (var i = 0; i < selectUc.options.length; i++) {
+                  if (selectUc.options[i].text.indexOf(resultadoIA.uc_cod_sugerido) !== -1) {
+                    selectUc.selectedIndex = i;
+                    break;
+                  }
+                }
+              }
+
               if (resultadoIA.articulos && resultadoIA.articulos.length > 0) {
                 document.getElementById('tablaDetalles').innerHTML = '';
                 resultadoIA.articulos.forEach(function(art) {
