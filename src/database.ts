@@ -96,3 +96,31 @@ function obtenerDatosIniciales() {
     throw new Error('Error al cargar catálogos desde Supabase: ' + error.message);
   }
 }
+
+function obtenerMetricasDSA() {
+  try {
+    const endpoint = 'dsa?select=id_dsa,folio_dsa,fecha_recepcion,no_oficio,cancelado_at,observaciones&order=creado.desc';
+    const registros = supabaseFetch(endpoint, { method: 'get' }) || [];
+
+    let total = registros.length;
+    let activos = 0;
+    let cancelados = 0;
+
+    registros.forEach(function(r) {
+      if (r.cancelado_at) {
+        cancelados++;
+      } else {
+        activos++;
+      }
+    });
+
+    return {
+      total: total,
+      activos: activos,
+      cancelados: cancelados,
+      recientes: registros.slice(0, 15)
+    };
+  } catch (error) {
+    throw new Error('No se pudieron compilar las métricas de Supabase: ' + error.message);
+  }
+}
